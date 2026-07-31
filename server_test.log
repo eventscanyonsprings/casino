@@ -1,0 +1,5 @@
+
+> casino@1.0.0 start
+> node server/index.js
+
+Casino server running at http://localhost:3000

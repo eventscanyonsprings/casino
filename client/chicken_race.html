@@ -311,10 +311,11 @@
 
             // --- Phase-based logic ---
 
-            // SPINNING: freeze screen, show indicator
-            if (state.phase === 'SPINNING') {
+            // RACING/SPINNING: freeze screen, show indicator
+            if (state.phase === 'RACING' || state.phase === 'SPINNING') {
                 freezeScreen(true);
                 raceIndicator.classList.remove('hidden');
+                raceIndicator.querySelector('span:last-child').textContent = 'Race in Progress...';
             }
 
             // When betsLocked is first set (SPINNING starts), auto-submit any pending bet
@@ -329,6 +330,7 @@
             if (state.phase === 'RESULT') {
                 freezeScreen(true);
                 raceIndicator.classList.remove('hidden');
+                raceIndicator.querySelector('span:last-child').textContent = 'Race Complete!';
                 // The result is determined by the Python script - use it to calculate payout
                 if (state.result !== null) {
                     calculateAndDisplayResult(state.result);

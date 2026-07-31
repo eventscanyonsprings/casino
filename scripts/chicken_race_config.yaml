@@ -2,7 +2,7 @@
 # Timing parameters (seconds)
 move_delay: 1.0                  # Delay between each chicken's turn
 animation_duration: 0.3          # How long the slide animation takes
-post_race_delay: 8               # Time to show results before next race
+post_race_delay: 30              # Time to show results before next race
 
 # Race parameters
 track_length: 1800               # Distance from start to finish

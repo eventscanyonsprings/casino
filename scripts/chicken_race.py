@@ -15,7 +15,7 @@ SERVER_STATE_UPDATE_URL = server_config.get_endpoint("/api/chicken-race/state-up
 _cr_config = server_config.load_game_config("chicken_race")
 MOVE_DELAY = _cr_config.get("move_delay", 1.0)           # seconds
 ANIMATION_DURATION = _cr_config.get("animation_duration", 0.3)  # seconds
-POST_RACE_DELAY = _cr_config.get("post_race_delay", 8)    # seconds
+POST_RACE_DELAY = _cr_config.get("post_race_delay", 30)    # seconds
 TRACK_LENGTH = _cr_config.get("track_length", 1800)
 NUM_SEGMENTS = _cr_config.get("num_segments", 8)
 SCREEN_WIDTH = _cr_config.get("screen_width", 1920)
@@ -95,6 +95,26 @@ def send_phase_update(phase, countdown_secs, message=None, message_type=None, re
     send_state_update(state)
 
 
+# Mid-race commentary lines (sent to web client as notifications / shown on screen)
+START_COMMENTARY = [
+    "They're OFF!",
+    "And the chickens are running!",
+    "Here we go! The race is underway!"
+]
+
+HALF_WAY_COMMENTARY = [
+    "We're at the halfway mark!",
+    "It's a tight race in the middle!",
+    "Halfway there - anything can happen!"
+]
+
+FINAL_STRETCH_COMMENTARY = [
+    "Down the final stretch!",
+    "The chickens are sprinting to the finish!",
+    "Who's going to take home the prize?"
+]
+
+
 class Chicken:
     def __init__(self, number, start_x, start_y, assets_path):
         self.number = number
@@ -136,8 +156,17 @@ class Chicken:
     def draw(self, screen):
         screen.blit(self.image, (self.x, self.y))
 
+
+def countdown_display_text(seconds_left):
+    """Return the betting status text for the scoreboard display."""
+    if seconds_left <= 2:
+        return "Bets are locked!"
+    return "Place your Bets"
+
+
 def main():
     pygame.init()
+    pygame.mixer.init()
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption("Chicken Race")
     
@@ -154,10 +183,9 @@ def main():
         background = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
         background.fill((100, 150, 100)) # Green fallback
 
-    # Create overlay for post-race screen
-    overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
-    overlay.fill(UI_COLORS["overlay"])
-    overlay.set_alpha(OVERLAY_OPACITY)
+    # Create overlay for post-race/betting screen
+    overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
+    overlay.fill((0, 0, 0, OVERLAY_OPACITY))
 
     # Create 5 chickens
     # 1 is top, 5 is bottom. We spread them across the screen height.
@@ -222,16 +250,25 @@ def main():
     off_sound_played = False
     half_way_played = False
     final_stretch_played = False
-    is_counting_down = False
+    is_counting_down = False          # Start with manual space-bar start
     countdown_start_time = 0
     call_to_post_channel = None
     last_move_time = 0
     winner = None
     font = pygame.font.SysFont("Arial", 120, bold=True)
     name_font = pygame.font.SysFont("Arial", 45, bold=True)
+    commentary_font = pygame.font.SysFont("Arial", 60, bold=True)
+
+    # Current on-screen dialog message and when it was shown
+    dialog_text = ""
+    dialog_start_time = 0
+    DIALOG_DURATION = 4000  # milliseconds
 
     # Send initial BETTING state
-    send_phase_update("BETTING", POST_RACE_DELAY)
+    send_phase_update("BETTING", POST_RACE_DELAY, "Press SPACE to start the race!", "info")
+    # Show initial dialog text on the big screen
+    dialog_text = "Press SPACE to start the race!"
+    dialog_start_time = pygame.time.get_ticks()
 
     running = True
     while running:
@@ -246,23 +283,30 @@ def main():
                 if event.key == pygame.K_ESCAPE:
                     running = False
                 if event.key == pygame.K_SPACE and not racing and not is_preparing and not is_counting_down:
-                    if winner or is_counting_down:
-                        # Reset the race state to allow a new race
-                        winner = None
-                        off_sound_played = False
-                        half_way_played = False
-                        final_stretch_played = False
-                        is_counting_down = False
-                        for chicken in chickens:
-                            chicken.x = START_X_POS
-                            chicken.target_x = START_X_POS
+                    # Start the race (either after a result, or the very first time)
+                    winner = None
+                    is_counting_down = False
+                    off_sound_played = False
+                    half_way_played = False
+                    final_stretch_played = False
+                    for chicken in chickens:
+                        chicken.x = START_X_POS
+                        chicken.target_x = START_X_POS
+                    
+                    if call_to_post_sound:
+                        call_to_post_channel = call_to_post_sound.play()
+                        is_preparing = True
+                        dialog_text = "And they're at the post..."
+                        dialog_start_time = pygame.time.get_ticks()
+                        send_phase_update("BETTING", POST_RACE_DELAY,
+                                          "They're at the post! Place your bets!", "info")
                     else:
-                        if call_to_post_sound:
-                            call_to_post_channel = call_to_post_sound.play()
-                            is_preparing = True
-                        else:
-                            racing = True
-                            last_move_time = pygame.time.get_ticks()
+                        racing = True
+                        last_move_time = pygame.time.get_ticks()
+                        dialog_text = random.choice(START_COMMENTARY)
+                        dialog_start_time = pygame.time.get_ticks()
+                        send_phase_update("RACING", None,
+                                          dialog_text, "info")
 
         # 2. Race Logic (Simultaneous movement)
         if is_preparing:
@@ -272,6 +316,10 @@ def main():
                 racing = True
                 # Reset timer and trigger the first movement immediately
                 last_move_time = pygame.time.get_ticks() - (MOVE_DELAY * 1000)
+                # Betting is now locked - send RACING phase
+                dialog_text = random.choice(START_COMMENTARY)
+                dialog_start_time = pygame.time.get_ticks()
+                send_phase_update("RACING", None, dialog_text, "info")
 
         if racing:
             current_time = pygame.time.get_ticks()
@@ -295,11 +343,17 @@ def main():
                 if any(c.x >= HALF_WAY_X for c in chickens):
                     random.choice(half_way_sounds).play()
                     half_way_played = True
+                    dialog_text = random.choice(HALF_WAY_COMMENTARY)
+                    dialog_start_time = pygame.time.get_ticks()
+                    send_phase_update("RACING", None, dialog_text, "info")
 
             if not final_stretch_played and final_stretch_sounds:
                 if any(c.x >= FINAL_STRETCH_X for c in chickens):
                     random.choice(final_stretch_sounds).play()
                     final_stretch_played = True
+                    dialog_text = random.choice(FINAL_STRETCH_COMMENTARY)
+                    dialog_start_time = pygame.time.get_ticks()
+                    send_phase_update("RACING", None, dialog_text, "info")
 
             # Check for winners based on visual crossing
             finishers = [c for c in chickens if c.x >= FINISH_LINE_X]
@@ -310,6 +364,8 @@ def main():
                 countdown_start_time = pygame.time.get_ticks()
                 if winner.number in winner_sounds:
                     winner_sounds[winner.number].play()
+                dialog_text = f"{CHICKEN_NAMES[winner.number - 1]} wins!"
+                dialog_start_time = pygame.time.get_ticks()
                 send_phase_update("RESULT", POST_RACE_DELAY,
                                   f"Chicken {winner.number} wins!", "success",
                                   result=winner.number)
@@ -323,10 +379,16 @@ def main():
             # Send phase updates during countdown
             if seconds_left == 10:
                 send_phase_update("BETTING", seconds_left, "Betting closing in 10 seconds!", "warning")
+                dialog_text = "Betting closes in 10 seconds!"
+                dialog_start_time = pygame.time.get_ticks()
             elif seconds_left == 5:
                 send_phase_update("BETTING", seconds_left, "Betting closing soon!", "warning")
+                dialog_text = "Betting closes in 5 seconds!"
+                dialog_start_time = pygame.time.get_ticks()
             elif seconds_left == 2:
                 send_phase_update("BETTING", seconds_left, "Bets are locked! No more bets.", "error")
+                dialog_text = "Bets are LOCKED!"
+                dialog_start_time = pygame.time.get_ticks()
             elif seconds_left > 0 and seconds_left % 5 == 0:
                 send_phase_update("BETTING", seconds_left)
 
@@ -351,10 +413,16 @@ def main():
                 if call_to_post_sound:
                     call_to_post_channel = call_to_post_sound.play()
                     is_preparing = True
+                    dialog_text = "And they're at the post..."
+                    dialog_start_time = pygame.time.get_ticks()
+                    send_phase_update("BETTING", POST_RACE_DELAY,
+                                      "They're at the post! Place your bets!", "info")
                 else:
                     racing = True
                     last_move_time = pygame.time.get_ticks()
-                send_phase_update("BETTING", POST_RACE_DELAY)
+                    dialog_text = random.choice(START_COMMENTARY)
+                    dialog_start_time = pygame.time.get_ticks()
+                    send_phase_update("RACING", None, dialog_text, "info")
 
         # 3. Drawing (Z-order: Chicken 1 is drawn first, Chicken 5 last/on top)
         screen.blit(background, (0, 0))
@@ -388,9 +456,7 @@ def main():
             screen.blit(timer_value, timer_value.get_rect(center=(SCREEN_WIDTH // 2, UI_BOTTOM_ANCHOR)))
 
             # Betting status text
-            betting_msg = "Place your Bets"
-            if seconds_left <= 2:
-                betting_msg = "Betting Closing"
+            betting_msg = countdown_display_text(seconds_left)
             
             betting_surface = name_font.render(betting_msg, True, UI_COLORS["text_primary"])
             screen.blit(betting_surface, betting_surface.get_rect(center=(SCREEN_WIDTH // 2, UI_BOTTOM_ANCHOR + 65)))
@@ -404,7 +470,13 @@ def main():
             winner_name_text = font.render(CHICKEN_NAMES[winner.number - 1], True, UI_COLORS["text_accent"])
             winner_name_rect = winner_name_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 70))
             screen.blit(winner_name_text, winner_name_rect)
-            
+
+        # Draw the dialog / commentary text at the top of the screen
+        if dialog_text and (current_ticks - dialog_start_time) < DIALOG_DURATION:
+            dialog_surface = commentary_font.render(dialog_text, True, UI_COLORS["text_accent"])
+            dialog_rect = dialog_surface.get_rect(center=(SCREEN_WIDTH // 2, 150))
+            screen.blit(dialog_surface, dialog_rect)
+
         pygame.display.flip()
 
     pygame.quit()

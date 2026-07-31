@@ -5,12 +5,31 @@
       "identifier": "::1",
       "username": "Paul",
       "unit_number": "602",
-      "balance": 1000,
+      "balance": 1035,
       "created_at": "2026-07-31 13:59:13",
-      "last_seen": "2026-07-31 15:03:01"
+      "last_seen": "2026-07-31 18:25:58"
     }
   ],
-  "transactions": [],
+  "transactions": [
+    {
+      "id": 1,
+      "user_id": 1,
+      "game_type": "chicken_race",
+      "bet_amount": 5,
+      "win_amount": 0,
+      "details": "{\"bets\":{\"1\":5},\"winningChicken\":3,\"result\":\"loss\",\"betResults\":{\"1\":{\"bet\":5,\"win\":0,\"result\":\"loss\"}}}",
+      "created_at": "2026-07-31 17:58:15"
+    },
+    {
+      "id": 2,
+      "user_id": 1,
+      "game_type": "chicken_race",
+      "bet_amount": 10,
+      "win_amount": 50,
+      "details": "{\"bets\":{\"3\":10},\"winningChicken\":3,\"result\":\"player_wins\",\"betResults\":{\"3\":{\"bet\":10,\"win\":50,\"result\":\"win\"}}}",
+      "created_at": "2026-07-31 17:58:15"
+    }
+  ],
   "next_user_id": 2,
-  "next_tx_id": 1
+  "next_tx_id": 3
 }

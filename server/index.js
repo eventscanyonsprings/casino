@@ -5,6 +5,7 @@ const { Server } = require('socket.io');
 const db = require('./db');
 const kenoState = require('./keno-state');
 const bigWheel6State = require('./big_wheel_6-state');
+const chickenRaceState = require('./chicken_race-state');
 
 // Check for --clear-db flag to reset the database on startup
 if (process.argv.includes('--clear-db')) {
@@ -19,6 +20,7 @@ const PORT = 3000;
 // Initialize game states with socket.io
 kenoState.init(io);
 bigWheel6State.init(io);
+chickenRaceState.init(io);
 
 // Parse JSON request bodies
 app.use(express.json());
@@ -49,6 +51,9 @@ app.use('/api/scratch', scratchRoutes);
 const bigWheelRoutes = require('./routes/big_wheel_6');
 app.use('/api/big-wheel-6', bigWheelRoutes);
 
+const chickenRaceRoutes = require('./routes/chicken_race');
+app.use('/api/chicken-race', chickenRaceRoutes);
+
 // POST /api/keno/state-update - keno.py pushes game state here
 app.post('/api/keno/state-update', (req, res) => {
   try {
@@ -72,6 +77,37 @@ app.post('/api/keno/state-update', (req, res) => {
       drawnNumbers: state.drawnNumbers,
       message: state.message,
       messageType: state.messageType
+    });
+    
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// POST /api/chicken-race/state-update - chicken_race.py pushes game state here
+app.post('/api/chicken-race/state-update', (req, res) => {
+  try {
+    const state = req.body;
+    
+    // Validate required fields
+    if (!state.phase) {
+      return res.status(400).json({ error: 'phase is required' });
+    }
+    
+    // Map phase string to enum
+    const validPhases = Object.values(chickenRaceState.PHASES);
+    if (!validPhases.includes(state.phase)) {
+      return res.status(400).json({ error: `Invalid phase: ${state.phase}` });
+    }
+    
+    chickenRaceState.updateFromPy({
+      phase: state.phase,
+      countdownSeconds: state.countdownSeconds,
+      message: state.message,
+      messageType: state.messageType,
+      result: state.result,
+      betsLocked: state.betsLocked
     });
     
     res.json({ success: true });
@@ -188,6 +224,18 @@ io.on('connection', (socket) => {
         messageType: gs.messageType,
         betsLocked: gs.betsLocked,
         result: gs.result
+      });
+    } else if (game === 'chicken_race') {
+      socket.join('chicken_race');
+      // Send current state immediately
+      const cs = chickenRaceState.getState();
+      socket.emit('chicken_race-state', {
+        phase: cs.phase,
+        countdownSeconds: cs.countdownSeconds,
+        message: cs.message,
+        messageType: cs.messageType,
+        betsLocked: cs.betsLocked,
+        result: cs.result
       });
     }
     console.log(`Client ${socket.id} joined game: ${game}`);
