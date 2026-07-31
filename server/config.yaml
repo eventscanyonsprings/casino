@@ -1,0 +1,37 @@
+# Casino Game Configuration
+# Edit this file to adjust game parameters, payouts, and starting balances
+
+starting_credits: 1000
+
+keno:
+  max_picks: 15
+  draw_count: 20
+  total_numbers: 40
+  # Payout multipliers keyed by number of matches
+  # 0-2 matches = 0 (lose)
+  payouts:
+    3: 1
+    4: 2
+    5: 5
+    6: 10
+    7: 20
+    8: 50
+    9: 100
+    10: 200
+    11: 500
+    12: 1000
+    13: 2500
+    14: 5000
+    15: 10000
+
+scratch:
+  cost: 5
+  rows: 5
+  # Prize amounts for each row
+  prizes: [0, 1, 2, 5, 10]
+  # Probability weights for each prize (must sum to 1.0)
+  probabilities: [0.40, 0.30, 0.15, 0.10, 0.05]
+
+big_wheel_6:
+  possible_bets: [1, 2, 5, 10, 20, 40]
+  # House always wins, no payout config needed

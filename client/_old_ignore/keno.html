@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keno - Casino</title>
+    <link rel="stylesheet" href="keno.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="casino-container">
+        <header>
+            <div class="logo">Casino Keno</div>
+            <div class="credits-display">
+                <span>Credits:</span>
+                <span id="credits">100</span>
+            </div>
+        </header>
+
+        <main class="game-area">
+            <div class="left-panel">
+                <div class="grid-header">
+                    <h2>Select up to 5 Numbers</h2>
+                    <span id="pick-count">0 / 5 Picks</span>
+                </div>
+                <div class="keno-grid" id="keno-grid">
+                    <!-- Numbers 1-40 injected by JS -->
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="paytable-container">
+                    <h3>Paytable</h3>
+                    <div class="paytable" id="paytable">
+                        <!-- Paytable injected by JS based on pick count -->
+                        <div class="pay-row"><span>Matches</span><span>Payout</span></div>
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <div class="bet-controls">
+                        <button id="btn-bet-down">-</button>
+                        <div class="bet-display">
+                            <span>Bet</span>
+                            <span id="bet-amount">1</span>
+                        </div>
+                        <button id="btn-bet-up">+</button>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button id="btn-clear" class="btn-secondary">Clear</button>
+                        <button id="btn-quick-pick" class="btn-secondary">Quick Pick</button>
+                    </div>
+
+                    <button id="btn-play" class="btn-primary" disabled>Play</button>
+                </div>
+                
+                <div id="game-message" class="game-message">
+                    Waiting for your bet...
+                </div>
+            </div>
+        </main>
+        
+        <div class="navigation">
+            <a href="index.html" class="nav-link">← Back to Games Menu</a>
+        </div>
+    </div>
+
+    <!-- Canvas for confetti -->
+    <canvas id="confetti-canvas"></canvas>
+    
+    <script src="keno.js"></script>
+</body>
+</html>

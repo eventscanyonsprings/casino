@@ -1,0 +1,3 @@
+# Server configuration for casino game scripts
+# Edit this file to point scripts to the Node.js server
+server_url: "http://localhost:3000"

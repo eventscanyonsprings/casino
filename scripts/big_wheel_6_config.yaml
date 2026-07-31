@@ -1,0 +1,10 @@
+# Big Wheel 6 game configuration
+# Timing parameters (seconds)
+countdown_duration: 30           # Time before spin starts
+spin_duration: 5.0               # Duration of the spin animation
+result_display_duration: 10      # Time to show results before next cycle
+
+# Display
+display_width: 1280
+display_height: 720
+fps: 30

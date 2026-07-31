@@ -1,0 +1,11 @@
+# Keno game configuration
+# Timing parameters (milliseconds)
+next_draw_interval: 30000        # Total time between draws
+betting_duration: 25000          # Time accepting bets (5/6 of interval)
+closing_duration: 5000           # Time for betting closing soon (1/6 of interval)
+results_display_duration: 3000   # Time to show results before next cycle
+
+# Game parameters
+max_picks: 15
+draw_count: 20
+total_numbers: 40

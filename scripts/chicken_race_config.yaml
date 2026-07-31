@@ -1,0 +1,15 @@
+# Chicken Race game configuration
+# Timing parameters (seconds)
+move_delay: 1.0                  # Delay between each chicken's turn
+animation_duration: 0.3          # How long the slide animation takes
+post_race_delay: 8               # Time to show results before next race
+
+# Race parameters
+track_length: 1800               # Distance from start to finish
+num_segments: 8                  # Used to calculate hop size
+chicken_count: 5
+
+# Display
+screen_width: 1920
+screen_height: 1080
+fps: 60

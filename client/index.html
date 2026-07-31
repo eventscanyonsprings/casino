@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casino Games Menu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <!-- Registration Overlay -->
+    <div class="register-overlay" id="register-overlay">
+        <div class="register-card">
+            <h1>Welcome</h1>
+            <p class="register-subtitle">Please enter your details to get started</p>
+            <form id="register-form" class="register-form">
+                <div class="form-group">
+                    <label for="username">Your Name</label>
+                    <input type="text" id="username" name="username" placeholder="Enter your name" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="unit_number">Unit Number</label>
+                    <input type="text" id="unit_number" name="unit_number" placeholder="Enter your unit number" required autocomplete="off">
+                </div>
+                <div class="form-error" id="register-error"></div>
+                <button type="submit" class="register-btn" id="register-btn">Continue</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Menu -->
+    <div class="menu-container" id="menu-container" style="display: none;">
+        <header>
+            <h1>Select a Game</h1>
+            <p class="subtitle">Experience the thrill of our premium casino</p>
+            <div class="balance-bar">
+                <span class="balance-label">Balance</span>
+                <span class="balance-amount" id="menu-balance">$0</span>
+            </div>
+        </header>
+
+        <main class="game-grid">
+            <a href="scratch.html" class="game-card scratch-theme">
+                <div class="card-content">
+                    <h2>Scratch & Win</h2>
+                    <p>Swipe to reveal hidden prizes in our classic scratch card game.</p>
+                </div>
+                <div class="card-action">Play Now</div>
+            </a>
+
+            <a href="keno.html" class="game-card keno-theme">
+                <div class="card-content">
+                    <h2>Keno 5/40</h2>
+                    <p>Pick your lucky numbers and match the draw for huge payouts.</p>
+                </div>
+                <div class="card-action">Play Now</div>
+            </a>
+
+            <a href="big_wheel_6.html" class="game-card big-wheel-theme">
+                <div class="card-content">
+                    <h2>Big Wheel 6</h2>
+                    <p>Bet on numbers 1, 2, 5, 10, 20, or 40 and watch the wheel spin!</p>
+                </div>
+                <div class="card-action">Play Now</div>
+            </a>
+
+            <a href="chicken_race.html" class="game-card chicken-race-theme">
+                <div class="card-content">
+                    <h2>Chicken Race</h2>
+                    <p>Bet on your favorite chicken and watch the race unfold for big payouts!</p>
+                </div>
+                <div class="card-action">Play Now</div>
+            </a>
+        </main>
+    </div>
+
+    <script>
+        const overlay = document.getElementById('register-overlay');
+        const menuContainer = document.getElementById('menu-container');
+        const registerForm = document.getElementById('register-form');
+        const usernameInput = document.getElementById('username');
+        const unitNumberInput = document.getElementById('unit_number');
+        const registerError = document.getElementById('register-error');
+        const registerBtn = document.getElementById('register-btn');
+
+        // Check if user is registered
+        function checkRegistration() {
+            fetch('/api/user')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('menu-balance').textContent = '$' + data.user.balance.toLocaleString();
+                        if (data.user.isRegistered) {
+                            // User is registered, show menu
+                            overlay.style.display = 'none';
+                            menuContainer.style.display = 'flex';
+                        } else {
+                            // User needs to register, show overlay
+                            overlay.style.display = 'flex';
+                            menuContainer.style.display = 'none';
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error('Failed to fetch user:', err);
+                    // If API fails, show menu anyway
+                    overlay.style.display = 'none';
+                    menuContainer.style.display = 'flex';
+                });
+        }
+
+        // Handle registration form submission
+        registerForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            registerError.textContent = '';
+            registerBtn.disabled = true;
+            registerBtn.textContent = 'Saving...';
+
+            const username = usernameInput.value.trim();
+            const unit_number = unitNumberInput.value.trim();
+
+            if (!username || !unit_number) {
+                registerError.textContent = 'Both name and unit number are required.';
+                registerBtn.disabled = false;
+                registerBtn.textContent = 'Continue';
+                return;
+            }
+
+            fetch('/api/user/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, unit_number })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Registration successful, show menu
+                    document.getElementById('menu-balance').textContent = '$' + data.user.balance.toLocaleString();
+                    overlay.style.display = 'none';
+                    menuContainer.style.display = 'flex';
+                } else {
+                    registerError.textContent = data.error || 'Registration failed. Please try again.';
+                    registerBtn.disabled = false;
+                    registerBtn.textContent = 'Continue';
+                }
+            })
+            .catch(err => {
+                registerError.textContent = 'Network error. Please try again.';
+                registerBtn.disabled = false;
+                registerBtn.textContent = 'Continue';
+            });
+        });
+
+        // Start
+        checkRegistration();
+    </script>
+</body>
+</html>

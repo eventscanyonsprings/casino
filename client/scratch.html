@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Casino - Scratch Card</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="scratch.css">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>Scratch & Win</h1>
+            <div class="credits-display">
+                <span>Credits:</span>
+                <span id="credit-balance">100</span>
+            </div>
+        </header>
+
+        <main>
+            <div class="scratch-card-wrapper">
+                <div class="scratch-card" id="scratch-card">
+                    <!-- Rows will be injected by JavaScript -->
+                </div>
+            </div>
+
+            <div class="controls">
+                <button id="play-button" class="btn-primary">Play (Cost: 5 Credits)</button>
+            </div>
+            
+            <div id="message-area" class="message-area">
+                Click Play to start a new card!
+            </div>
+        </main>
+        
+        <div class="navigation" style="text-align: center; margin-top: 16px;">
+            <a href="index.html" style="color: #94a3b8; text-decoration: none; font-size: 14px;">← Back to Games Menu</a>
+        </div>
+    </div>
+
+    <!-- Minimal confetti library for celebration -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="scratch.js"></script>
+</body>
+</html>

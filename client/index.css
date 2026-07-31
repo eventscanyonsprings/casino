@@ -1,0 +1,276 @@
+:root {
+    --bg-dark: #0a0e17;
+    --text-main: #e2e8f0;
+    --text-muted: #94a3b8;
+    --accent-gold: #fbbf24;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    background-image: radial-gradient(circle at 50% -20%, #1a233a 0%, #0a0e17 80%);
+}
+
+.menu-container {
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+    text-align: center;
+}
+
+header h1 {
+    font-size: 48px;
+    font-weight: 900;
+    color: var(--accent-gold);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+    text-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
+}
+
+.subtitle {
+    font-size: 18px;
+    color: var(--text-muted);
+}
+
+.game-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 32px;
+}
+
+.game-card {
+    background: #151b29;
+    border-radius: 20px;
+    padding: 32px;
+    text-decoration: none;
+    color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 280px;
+    border: 1px solid rgba(255,255,255,0.05);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.game-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+    z-index: 1;
+}
+
+.card-content, .card-action {
+    position: relative;
+    z-index: 2;
+    text-align: left;
+}
+
+.game-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+}
+
+.scratch-theme:hover { border-color: #ec4899; box-shadow: 0 15px 40px rgba(236, 72, 153, 0.3); }
+.keno-theme:hover { border-color: #3b82f6; box-shadow: 0 15px 40px rgba(59, 130, 246, 0.3); }
+.big-wheel-theme:hover { border-color: #00E5FF; box-shadow: 0 15px 40px rgba(0, 229, 255, 0.3); }
+.chicken-race-theme:hover { border-color: #f97316; box-shadow: 0 15px 40px rgba(249, 115, 22, 0.3); }
+
+.card-content h2 {
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 16px;
+}
+
+.scratch-theme h2 { color: #ec4899; }
+.keno-theme h2 { color: #3b82f6; }
+.big-wheel-theme h2 { color: #00E5FF; }
+.chicken-race-theme h2 { color: #f97316; }
+
+.card-content p {
+    color: var(--text-muted);
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.card-action {
+    align-self: flex-start;
+    padding: 12px 24px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+.scratch-theme .card-action { color: #ec4899; }
+.keno-theme .card-action { color: #3b82f6; }
+.big-wheel-theme .card-action { color: #00E5FF; }
+.chicken-race-theme .card-action { color: #f97316; }
+
+.game-card:hover .card-action {
+    background: rgba(255,255,255,0.1);
+}
+
+.balance-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 16px;
+    padding: 12px 24px;
+    background: #151b29;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.05);
+    display: inline-flex;
+}
+
+.balance-label {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+}
+
+.balance-amount {
+    font-size: 24px;
+    font-weight: 900;
+    color: var(--accent-gold);
+    text-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
+}
+
+/* Registration Overlay */
+.register-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(10, 14, 23, 0.95);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.register-card {
+    background: #151b29;
+    border-radius: 20px;
+    padding: 48px 40px;
+    max-width: 420px;
+    width: 100%;
+    border: 1px solid rgba(255,255,255,0.05);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    text-align: center;
+}
+
+.register-card h1 {
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--accent-gold);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    text-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
+}
+
+.register-subtitle {
+    font-size: 15px;
+    color: var(--text-muted);
+    margin-bottom: 32px;
+}
+
+.register-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    text-align: left;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+}
+
+.form-group input {
+    background: #0a0e17;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 16px;
+    color: var(--text-main);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.15);
+}
+
+.form-group input::placeholder {
+    color: #4a5568;
+}
+
+.form-error {
+    font-size: 14px;
+    color: #ef4444;
+    text-align: center;
+    min-height: 20px;
+}
+
+.register-btn {
+    background: var(--accent-gold);
+    color: #0a0e17;
+    border: none;
+    border-radius: 10px;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    margin-top: 8px;
+}
+
+.register-btn:hover {
+    background: #f59e0b;
+}
+
+.register-btn:active {
+    transform: scale(0.98);
+}
+
+.register-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}

@@ -1,0 +1,29 @@
+{
+  "name": "casino",
+  "version": "1.0.0",
+  "description": "For a Casino night",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "start:clear": "node server/index.js --clear-db",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pauloliffdev/casino.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/pauloliffdev/casino/issues"
+  },
+  "homepage": "https://github.com/pauloliffdev/casino#readme",
+  "dependencies": {
+    "express": "^5.2.1",
+    "js-yaml": "^5.2.2",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3"
+  }
+}

@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        @layer base {
+            html, body {
+                width: 100vw;
+                margin: 0;
+                padding: 0;
+                background-color: #0A111E;
+                overflow: hidden;
+            }
+            body {
+                overscroll-behavior: none;
+            }
+            .pb-safe {
+                padding-bottom: env(safe-area-inset-bottom, 0px);
+            }
+            .pt-safe {
+                padding-top: env(safe-area-inset-top, 0px);
+            }
+            main > :first-child {
+                margin-top: 0 !important;
+            }
+            main > :last-child {
+                margin-bottom: 0 !important;
+            }
+        }
+        ::-webkit-scrollbar {
+            display: none;
+        }
+        @media (min-aspect-ratio: 16/9) {
+            .landscape-container {
+                max-width: 177.78vh;
+                margin: 0 auto;
+            }
+        }
+    </style>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-bright": "#454f5d",
+                        "on-secondary-container": "#725f00",
+                        "outline-variant": "#4a5b5d",
+                        "secondary-container": "#ffdb3c",
+                        "error": "#ffb4ab",
+                        "on-secondary": "#3a3000",
+                        "on-tertiary": "#690003",
+                        "surface-variant": "#364150",
+                        "on-secondary-fixed-variant": "#544600",
+                        "inverse-surface": "#dbe3f4",
+                        "surface-container-low": "#1e2837",
+                        "on-tertiary-container": "#c1000a",
+                        "inverse-on-surface": "#29313e",
+                        "primary-container": "#00f0ff",
+                        "secondary-fixed": "#ffe16d",
+                        "primary-fixed": "#7df4ff",
+                        "primary": "#00f0ff",
+                        "on-tertiary-fixed-variant": "#930005",
+                        "inverse-primary": "#006970",
+                        "on-error": "#690005",
+                        "on-tertiary-fixed": "#410001",
+                        "surface-tint": "#00dbe9",
+                        "tertiary-fixed-dim": "#ffb4aa",
+                        "on-surface-variant": "#d1e1e2",
+                        "primary-fixed-dim": "#00dbe9",
+                        "surface-container-high": "#323c4b",
+                        "on-secondary-fixed": "#221b00",
+                        "tertiary-container": "#ffcec7",
+                        "tertiary": "#fff3f1",
+                        "on-primary": "#000000",
+                        "secondary-fixed-dim": "#e9c400",
+                        "error-container": "#93000a",
+                        "on-primary-fixed": "#002022",
+                        "on-background": "#ffffff",
+                        "on-error-container": "#ffdad6",
+                        "secondary": "#fff9ef",
+                        "surface-container": "#252e3b",
+                        "surface-dim": "#0A111E",
+                        "surface-container-highest": "#3f4b5b",
+                        "on-primary-container": "#006970",
+                        "on-surface": "#ffffff",
+                        "tertiary-fixed": "#ffdad5",
+                        "surface-container-lowest": "#0e1826",
+                        "background": "#0A111E",
+                        "outline": "#94a3a4",
+                        "surface": "#0A111E",
+                        "on-primary-fixed-variant": "#004f54"
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.25rem",
+                        lg: "0.5rem",
+                        xl: "0.75rem",
+                        full: "9999px"
+                    },
+                    spacing: {
+                        "container-padding": "24px",
+                        "touch-target-min": "48px",
+                        "section-margin": "32px",
+                        "grid-gap": "8px"
+                    },
+                    fontFamily: {
+                        "display-number": ["Sora"],
+                        "label-bold": ["Hanken Grotesk"],
+                        "body-md": ["Hanken Grotesk"],
+                        "display-number-mobile": ["Sora"],
+                        "headline-sm": ["Sora"],
+                        "headline-lg": ["Sora"]
+                    },
+                    fontSize: {
+                        "display-number": ["32px", { lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "800" }],
+                        "label-bold": ["16px", { lineHeight: "20px", fontWeight: "800" }],
+                        "body-md": ["18px", { lineHeight: "26px", fontWeight: "400" }],
+                        "display-number-mobile": ["28px", { lineHeight: "32px", fontWeight: "800" }],
+                        "headline-sm": ["24px", { lineHeight: "32px", fontWeight: "700" }],
+                        "headline-lg": ["40px", { lineHeight: "48px", fontWeight: "800" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background font-body-md text-on-surface flex flex-col min-h-screen overflow-hidden">
+    <!-- Header -->
+    <header class="fixed top-0 inset-x-0 z-50 bg-surface/90 backdrop-blur-2xl pt-safe shadow-lg">
+        <div class="h-16 px-container-padding flex items-center justify-between landscape-container">
+            <div class="flex items-center gap-6">
+                <h1 class="font-headline-lg text-headline-sm uppercase tracking-wider text-primary font-bold">CHICKEN RACE</h1>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="flex items-baseline gap-2">
+                    <span class="text-sm uppercase font-label-bold text-white/70 tracking-widest">BALANCE</span>
+                    <span class="font-display-number-mobile text-[36px] text-primary" id="balance-display">$0</span>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-surface-container-high border-2 border-primary flex items-center justify-center">
+                    <span class="material-symbols-outlined text-primary text-[24px]">person</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col pt-16 landscape-container w-full h-full">
+        <div class="flex-1 grid grid-cols-12 gap-8 p-container-padding">
+            <!-- Left/Center Area: Chicken Betting Grid (75%) -->
+            <div class="col-span-9 flex flex-col gap-4">
+                <!-- Notification Area -->
+                <div id="notification-area" class="hidden flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-label-bold uppercase tracking-wider transition-all duration-300">
+                    <span id="notification-icon" class="material-symbols-outlined text-lg">info</span>
+                    <span id="notification-text">Notification</span>
+                </div>
+
+                    <!-- Chicken Betting Grid Container -->
+                    <div class="bg-surface-container p-6 rounded-[2rem] w-full flex flex-col gap-4 shadow-2xl border border-white/5">
+                        <!-- 5 Chicken Betting Buttons -->
+                        <div class="flex flex-col gap-4">
+                            <!-- Row 1: 3 Chickens -->
+                            <div class="grid grid-cols-3 gap-4">
+                                <!-- Chicken 1: Cluck Norris -->
+                                <button class="chicken-bet-tile aspect-[3/2] rounded-2xl flex flex-col items-center justify-center gap-2 transition-all active:scale-95 border-2 border-transparent hover:brightness-110" data-chicken="1" onclick="toggleBetTile(1)">
+                                    <img src="/assets/chicken_1.png" alt="Cluck Norris" class="w-20 h-20 object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]">
+                                    <span class="font-display-number text-xl text-white font-bold">Cluck Norris</span>
+                                </button>
+                                <!-- Chicken 2: Beakoncé -->
+                                <button class="chicken-bet-tile aspect-[3/2] rounded-2xl flex flex-col items-center justify-center gap-2 transition-all active:scale-95 border-2 border-transparent hover:brightness-110" data-chicken="2" onclick="toggleBetTile(2)">
+                                    <img src="/assets/chicken_2.png" alt="Beakoncé" class="w-20 h-20 object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]">
+                                    <span class="font-display-number text-xl text-white font-bold">Beakoncé</span>
+                                </button>
+                                <!-- Chicken 3: Chick Jagger -->
+                                <button class="chicken-bet-tile aspect-[3/2] rounded-2xl flex flex-col items-center justify-center gap-2 transition-all active:scale-95 border-2 border-transparent hover:brightness-110" data-chicken="3" onclick="toggleBetTile(3)">
+                                    <img src="/assets/chicken_3.png" alt="Chick Jagger" class="w-20 h-20 object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]">
+                                    <span class="font-display-number text-xl text-white font-bold">Chick Jagger</span>
+                                </button>
+                            </div>
+                            <!-- Row 2: 2 Chickens -->
+                            <div class="grid grid-cols-2 gap-4 justify-center">
+                                <!-- Chicken 4: Yolko Ono -->
+                                <button class="chicken-bet-tile aspect-[3/2] rounded-2xl flex flex-col items-center justify-center gap-2 transition-all active:scale-95 border-2 border-transparent hover:brightness-110" data-chicken="4" onclick="toggleBetTile(4)">
+                                    <img src="/assets/chicken_4.png" alt="Yolko Ono" class="w-20 h-20 object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]">
+                                    <span class="font-display-number text-xl text-white font-bold">Yolko Ono</span>
+                                </button>
+                                <!-- Chicken 5: Egg Sheeran -->
+                                <button class="chicken-bet-tile aspect-[3/2] rounded-2xl flex flex-col items-center justify-center gap-2 transition-all active:scale-95 border-2 border-transparent hover:brightness-110" data-chicken="5" onclick="toggleBetTile(5)">
+                                    <img src="/assets/chicken_5.png" alt="Egg Sheeran" class="w-20 h-20 object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)]">
+                                    <span class="font-display-number text-xl text-white font-bold">Egg Sheeran</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                <!-- Results Display -->
+                <div id="results-area" class="hidden bg-surface-container-highest p-4 rounded-2xl border border-primary/20">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="font-label-bold text-sm uppercase text-on-surface-variant tracking-widest">Result</span>
+                            <div id="result-display" class="font-display-number text-2xl mt-1"></div>
+                        </div>
+                        <div class="text-right">
+                            <span class="font-label-bold text-sm uppercase text-on-surface-variant tracking-widest">Winning Chicken</span>
+                            <div id="winning-chicken-display" class="font-display-number text-4xl mt-1 text-primary"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar: Bet Controls (25%) -->
+            <div class="col-span-3 flex flex-col gap-6">
+                <!-- Current Bet Indicator -->
+                <div class="bg-surface-container-highest p-5 rounded-2xl flex flex-col gap-2 shadow-inner border border-primary/20 relative">
+                    <div class="flex flex-col items-start">
+                        <button onclick="clearAllBets()" class="absolute top-3 right-3 w-8 h-8 flex items-center justify-center bg-error rounded-full shadow-lg active:scale-90 transition-transform" aria-label="Clear Bet">
+                            <span class="material-symbols-outlined text-on-error text-sm font-bold">close</span>
+                        </button>
+                        <span class="font-label-bold text-xs uppercase text-on-surface-variant tracking-widest block mb-1">Current Bet</span>
+                        <span class="font-display-number text-[48px] text-primary" id="bet-display">0</span>
+                    </div>
+                </div>
+
+                <!-- Bet Amount Preset Buttons -->
+                <div class="flex flex-col gap-3">
+                    <div class="flex items-center justify-between px-1">
+                        <span class="font-label-bold text-sm uppercase text-on-surface-variant tracking-widest">Bet Amount</span>
+                    </div>
+                    <div class="grid grid-cols-1 gap-3">
+                        <button class="flex items-center justify-between px-5 h-14 rounded-xl bg-surface-bright text-white border-2 border-transparent hover:border-primary/50 transition-all active:scale-95 group" onclick="addBet(1)">
+                            <span class="font-display-number text-2xl group-hover:text-primary transition-colors">1</span>
+                            <span class="font-label-bold text-xs uppercase opacity-80">Credit</span>
+                        </button>
+                        <button class="flex items-center justify-between px-5 h-14 rounded-xl bg-surface-bright text-white border-2 border-transparent hover:border-primary/50 transition-all active:scale-95 group" onclick="addBet(5)">
+                            <span class="font-display-number text-2xl group-hover:text-primary transition-colors">5</span>
+                            <span class="font-label-bold text-xs uppercase opacity-80">Credits</span>
+                        </button>
+                        <button class="flex items-center justify-between px-5 h-14 rounded-xl bg-surface-bright text-white border-2 border-transparent hover:border-primary/50 transition-all active:scale-95 group" onclick="addBet(25)">
+                            <span class="font-display-number text-2xl group-hover:text-primary transition-colors">25</span>
+                            <span class="font-label-bold text-xs uppercase opacity-80">Credits</span>
+                        </button>
+                        <button class="flex items-center justify-between px-5 h-14 rounded-xl bg-surface-bright text-white border-2 border-transparent hover:border-primary/50 transition-all active:scale-95 group" onclick="addBet(50)">
+                            <span class="font-display-number text-2xl group-hover:text-primary transition-colors">50</span>
+                            <span class="font-label-bold text-xs uppercase opacity-80">Credits</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Race Indicator (shown when race is running, replaces play button) -->
+                <div id="race-indicator" class="hidden w-full h-16 flex items-center justify-center gap-3 px-6 bg-surface-container-highest text-on-surface font-headline-sm text-xl uppercase tracking-widest rounded-2xl border border-primary/20">
+                    <span class="material-symbols-outlined text-[32px] font-bold animate-spin text-primary">directions_run</span>
+                    <span class="text-on-surface-variant">Race in Progress...</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const balanceDisplay = document.getElementById('balance-display');
+        const betDisplay = document.getElementById('bet-display');
+        const resultsArea = document.getElementById('results-area');
+        const resultDisplay = document.getElementById('result-display');
+        const winningChickenDisplay = document.getElementById('winning-chicken-display');
+        const raceIndicator = document.getElementById('race-indicator');
+        const notificationArea = document.getElementById('notification-area');
+        const notificationIcon = document.getElementById('notification-icon');
+        const notificationText = document.getElementById('notification-text');
+
+        // Chicken names matching chicken_race.py
+        const CHICKEN_NAMES = {
+            1: "Cluck Norris",
+            2: "Beakoncé",
+            3: "Chick Jagger",
+            4: "Yolko Ono",
+            5: "Egg Sheeran"
+        };
+
+        // Game state
+        let selectedChicken = null;  // The number of the currently selected chicken (1-5) or null
+        let currentBet = 0;          // Total bet amount placed on the selected chicken
+        let isPlaying = false;
+        let betsLocked = false;
+        let pendingResult = null;    // API result stored until RESULT phase is received
+        let currentPhase = 'BETTING';
+        let hasSubmittedThisRound = false; // Track if bet was already submitted for this round
+
+        // ---- Socket.io Connection ----
+        const socket = io();
+
+        // Join the chicken race game room
+        socket.emit('join-game', 'chicken_race');
+
+        // Listen for chicken race state updates from the Python script
+        socket.on('chicken_race-state', (state) => {
+            betsLocked = state.betsLocked;
+            currentPhase = state.phase;
+
+            // Show/hide notification
+            if (state.message) {
+                showNotification(state.message, state.messageType);
+            } else {
+                hideNotification();
+            }
+
+            // --- Phase-based logic ---
+
+            // SPINNING: freeze screen, show indicator
+            if (state.phase === 'SPINNING') {
+                freezeScreen(true);
+                raceIndicator.classList.remove('hidden');
+            }
+
+            // When betsLocked is first set (SPINNING starts), auto-submit any pending bet
+            if (state.betsLocked && !isPlaying && !hasSubmittedThisRound) {
+                if (selectedChicken !== null && currentBet > 0) {
+                    submitPendingBet();
+                }
+                hasSubmittedThisRound = true;
+            }
+
+            // RESULT phase: show the result from the Python script (source of truth)
+            if (state.phase === 'RESULT') {
+                freezeScreen(true);
+                raceIndicator.classList.remove('hidden');
+                // The result is determined by the Python script - use it to calculate payout
+                if (state.result !== null) {
+                    calculateAndDisplayResult(state.result);
+                }
+            }
+
+            // BETTING phase: reset for next round
+            if (state.phase === 'BETTING') {
+                freezeScreen(false);
+                raceIndicator.classList.add('hidden');
+                isPlaying = false;
+                hasSubmittedThisRound = false;
+                pendingResult = null;
+            }
+
+            // Update input states based on locked status
+            if (state.betsLocked || state.phase !== 'BETTING') {
+                document.querySelectorAll('.chicken-bet-tile').forEach(tile => {
+                    tile.style.cursor = 'not-allowed';
+                    tile.classList.add('opacity-60');
+                });
+                document.querySelectorAll('[onclick^="addBet"]').forEach(btn => {
+                    btn.style.cursor = 'not-allowed';
+                    btn.classList.add('opacity-60');
+                });
+            } else {
+                document.querySelectorAll('.chicken-bet-tile').forEach(tile => {
+                    tile.style.cursor = 'pointer';
+                    tile.classList.remove('opacity-60');
+                });
+                document.querySelectorAll('[onclick^="addBet"]').forEach(btn => {
+                    btn.style.cursor = 'pointer';
+                    btn.classList.remove('opacity-60');
+                });
+            }
+        });
+
+        function freezeScreen(frozen) {
+            if (frozen) {
+                raceIndicator.classList.remove('hidden');
+                document.querySelectorAll('.chicken-bet-tile').forEach(tile => {
+                    tile.style.cursor = 'not-allowed';
+                    tile.classList.add('opacity-60');
+                });
+                document.querySelectorAll('[onclick^="addBet"]').forEach(btn => {
+                    btn.style.cursor = 'not-allowed';
+                    btn.classList.add('opacity-60');
+                });
+            } else {
+                raceIndicator.classList.add('hidden');
+                if (currentPhase === 'BETTING' && !betsLocked) {
+                    document.querySelectorAll('.chicken-bet-tile').forEach(tile => {
+                        tile.style.cursor = 'pointer';
+                        tile.classList.remove('opacity-60');
+                    });
+                    document.querySelectorAll('[onclick^="addBet"]').forEach(btn => {
+                        btn.style.cursor = 'pointer';
+                        btn.classList.remove('opacity-60');
+                    });
+                }
+            }
+        }
+
+        async function submitPendingBet() {
+            if (isPlaying) return;
+            isPlaying = true;
+
+            // Build bets object for the server
+            const bets = {};
+            bets[selectedChicken] = currentBet;
+
+            // Store the bet info for calculating result when the Python result arrives
+            pendingResult = {
+                chicken: selectedChicken,
+                amount: currentBet
+            };
+
+            // Hide previous results
+            resultsArea.classList.add('hidden');
+
+            try {
+                const res = await fetch('/api/chicken-race/play', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        bets: bets,
+                        totalBet: currentBet
+                    })
+                });
+
+                const data = await res.json();
+
+                if (!data.success) {
+                    // API error - show immediately
+                    displayGameResult({ error: data.error || 'Error placing bet', betAmount: currentBet, isWin: false, isHouseWin: false, winAmount: 0, newBalance: 0 });
+                    isPlaying = false;
+                    pendingResult = null;
+                    return;
+                }
+
+                // The bet is now pending. The result will be calculated when the
+                // Python script sends the RESULT phase with the winning chicken.
+                // The balance was already deducted by the server.
+            } catch (err) {
+                console.error('Failed to submit bet:', err);
+                displayGameResult({ error: 'Network error. Try again.', betAmount: currentBet, isWin: false, isHouseWin: false, winAmount: 0, newBalance: 0 });
+                isPlaying = false;
+                pendingResult = null;
+            }
+        }
+
+        /**
+         * Calculate the result from the winning chicken (sent by the Python script)
+         * and display it. This uses the locally stored bet info to determine
+         * if the player won or lost.
+         */
+        async function calculateAndDisplayResult(winningChicken) {
+            // Use the stored bet info from pendingResult
+            const betChicken = pendingResult ? pendingResult.chicken : selectedChicken;
+            const betAmount = pendingResult ? pendingResult.amount : currentBet;
+
+            if (betChicken === null || betAmount <= 0) {
+                // No bet was placed this round - just show the winning chicken
+                displayGameResult({
+                    winningChicken: winningChicken,
+                    betAmount: 0,
+                    winAmount: 0,
+                    isWin: false,
+                    isHouseWin: false,
+                    newBalance: undefined
+                });
+                return;
+            }
+
+            const isWin = parseInt(winningChicken) === betChicken;
+            // Payout: 5:1 odds (bet on 1 of 5 chickens, winner pays 5x)
+            const winAmount = isWin ? betAmount * 5 : 0;
+
+            // Fetch the updated balance from the server
+            let newBalance = undefined;
+            try {
+                const res = await fetch('/api/chicken-race/state');
+                const data = await res.json();
+                if (data.success) {
+                    newBalance = data.state.balance;
+                }
+            } catch (err) {
+                console.error('Failed to fetch balance:', err);
+            }
+
+            displayGameResult({
+                winningChicken: winningChicken,
+                betAmount: betAmount,
+                winAmount: winAmount,
+                isWin: isWin,
+                isHouseWin: false,
+                newBalance: newBalance
+            });
+
+            pendingResult = null;
+        }
+
+        function showNotification(message, type) {
+            notificationArea.classList.remove('hidden');
+            notificationText.textContent = message;
+
+            const iconMap = {
+                'info': 'info',
+                'warning': 'warning',
+                'error': 'error',
+                'success': 'check_circle'
+            };
+            notificationIcon.textContent = iconMap[type] || 'info';
+
+            notificationArea.classList.remove('bg-primary/20', 'bg-secondary-container/20', 'bg-error/20', 'bg-green-500/20', 'border-primary/30', 'border-secondary-container/30', 'border-error/30', 'border-green-500/30');
+            notificationArea.classList.remove('text-primary', 'text-secondary-container', 'text-error', 'text-green-400');
+
+            const colorMap = {
+                'info': { bg: 'bg-primary/20', border: 'border-primary/30', text: 'text-primary' },
+                'warning': { bg: 'bg-secondary-container/20', border: 'border-secondary-container/30', text: 'text-secondary-container' },
+                'error': { bg: 'bg-error/20', border: 'border-error/30', text: 'text-error' },
+                'success': { bg: 'bg-green-500/20', border: 'border-green-500/30', text: 'text-green-400' }
+            };
+
+            const colors = colorMap[type] || colorMap.info;
+            notificationArea.classList.add(colors.bg, colors.border, colors.text);
+            notificationArea.classList.add('border');
+        }
+
+        function hideNotification() {
+            notificationArea.classList.add('hidden');
+        }
+
+        // (no play button - auto-submit based on phase)
+
+        // Fetch user state on load
+        async function fetchUserState() {
+            try {
+                const res = await fetch('/api/chicken-race/state');
+                const data = await res.json();
+                if (data.success) {
+                    updateBalanceDisplay(data.state.balance);
+                }
+            } catch (err) {
+                console.error('Failed to fetch user state:', err);
+            }
+        }
+
+        function updateBalanceDisplay(balance) {
+            balanceDisplay.innerText = '$' + balance.toLocaleString();
+        }
+
+        function updateBetDisplay() {
+            betDisplay.innerText = currentBet;
+        }
+
+        function toggleBetTile(chickenNum) {
+            if (isPlaying || betsLocked) return;
+
+            const tile = document.querySelector(`.chicken-bet-tile[data-chicken="${chickenNum}"]`);
+
+            if (selectedChicken === chickenNum) {
+                // Deselect the current chicken
+                selectedChicken = null;
+                currentBet = 0;
+                tile.classList.remove('ring-2', 'ring-white', 'scale-105', 'shadow-xl');
+                tile.classList.add('border-transparent');
+            } else {
+                // Deselect the previous chicken if any
+                if (selectedChicken !== null) {
+                    const prevTile = document.querySelector(`.chicken-bet-tile[data-chicken="${selectedChicken}"]`);
+                    if (prevTile) {
+                        prevTile.classList.remove('ring-2', 'ring-white', 'scale-105', 'shadow-xl');
+                        prevTile.classList.add('border-transparent');
+                    }
+                }
+                // Select the new chicken
+                selectedChicken = chickenNum;
+                currentBet = 0;
+                tile.classList.add('ring-2', 'ring-white', 'scale-105', 'shadow-xl');
+                tile.classList.remove('border-transparent');
+            }
+            updateBetDisplay();
+            triggerHaptic();
+        }
+
+        function addBet(amount) {
+            if (isPlaying || betsLocked) return;
+
+            if (selectedChicken === null) {
+                // No chicken selected - show a notification to select a chicken first
+                showNotification('Select a chicken to bet on first!', 'warning');
+                return;
+            }
+
+            // Add the amount to the current bet on the selected chicken
+            currentBet += amount;
+            updateBetDisplay();
+            triggerHaptic();
+        }
+
+        function clearAllBets() {
+            if (isPlaying || betsLocked) return;
+            if (selectedChicken !== null) {
+                const tile = document.querySelector(`.chicken-bet-tile[data-chicken="${selectedChicken}"]`);
+                if (tile) {
+                    tile.classList.remove('ring-2', 'ring-white', 'scale-105', 'shadow-xl');
+                    tile.classList.add('border-transparent');
+                }
+                selectedChicken = null;
+            }
+            currentBet = 0;
+            updateBetDisplay();
+        }
+
+        function triggerHaptic() {
+            if (window.navigator && window.navigator.vibrate) {
+                window.navigator.vibrate(15);
+            }
+        }
+
+        function displayGameResult(result) {
+            // Update balance
+            if (result.newBalance !== undefined) {
+                updateBalanceDisplay(result.newBalance);
+            }
+
+            // Show winning chicken name
+            const winningName = CHICKEN_NAMES[result.winningChicken] || result.winningChicken;
+            winningChickenDisplay.textContent = winningName;
+
+            // Build result display
+            let resultHtml = '';
+            let message = '';
+
+            if (result.error) {
+                // Error case
+                resultHtml = `<div class="text-error font-bold text-lg">${result.error}</div>`;
+                message = result.error;
+            } else if (result.isWin) {
+                resultHtml = `
+                    <div class="text-secondary-container font-bold text-xl">+${result.winAmount}</div>
+                    <div class="text-sm text-on-surface-variant">Won on ${winningName}</div>
+                `;
+                message = `You won ${result.winAmount.toLocaleString()} credits!`;
+            } else {
+                resultHtml = `
+                    <div class="text-error font-bold">-${result.betAmount}</div>
+                    <div class="text-sm text-on-surface-variant">Lost to ${winningName}</div>
+                `;
+                message = 'Better luck next time!';
+            }
+
+            resultDisplay.innerHTML = resultHtml;
+            resultsArea.classList.remove('hidden');
+
+            // Show prominent message
+            if (message) {
+                showNotification(message, result.isWin ? 'success' : 'warning');
+            }
+
+            // Clear the bet for next round
+            clearAllBetsSilently();
+            isPlaying = false;
+        }
+
+        function clearAllBetsSilently() {
+            if (selectedChicken !== null) {
+                const tile = document.querySelector(`.chicken-bet-tile[data-chicken="${selectedChicken}"]`);
+                if (tile) {
+                    tile.classList.remove('ring-2', 'ring-white', 'scale-105', 'shadow-xl');
+                    tile.classList.add('border-transparent');
+                }
+                selectedChicken = null;
+            }
+            currentBet = 0;
+            updateBetDisplay();
+        }
+
+        // Load user state on page load
+        fetchUserState();
+
+        // ---- Exit Guard ----
+        function handleExit() {
+            if (isPlaying) {
+                if (!confirm('A race is in progress! If you leave now, you will lose your bet. Are you sure?')) {
+                    return;
+                }
+            } else if (currentBet > 0) {
+                if (!confirm('You have a bet placed. Are you sure you want to leave?')) {
+                    return;
+                }
+            }
+            window.location.href = 'index.html';
+        }
+    </script>
+    <style>
+        .chicken-bet-tile {
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            min-height: 100px;
+        }
+        #notification-area {
+            transition: all 0.3s ease;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</body>
+</html>
