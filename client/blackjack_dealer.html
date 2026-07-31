@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blackjack - Dealer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Outfit:wght@500;700;800;900&display=swap" rel="stylesheet">
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle, #1a4d2e 0%, #0d2818 100%);
+            color: #ffffff;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            user-select: none;
+        }
+
+        /* Top Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            height: 70px;
+        }
+        .header-left h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: #ffdb3c;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .nav-home-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            font-size: 13px;
+        }
+        .nav-home-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Main Game Area */
+        main {
+            flex: 1;
+            display: flex;
+            position: relative;
+            padding: 30px;
+            gap: 30px;
+            overflow: hidden;
+        }
+
+        /* Left Side: Dealer hand & Deck */
+        .dealer-table-side {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding-right: 30px;
+        }
+
+        .dealer-cards-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        .dealer-label {
+            font-family: 'Outfit', sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 1px;
+        }
+        .dealer-cards-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 180px;
+            padding: 10px;
+        }
+        .card-img {
+            width: 120px;
+            height: 174px;
+            border-radius: 8px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5);
+            margin-left: -50px;
+            background: white;
+            transition: transform 0.2s;
+        }
+        .card-img:first-child {
+            margin-left: 0;
+        }
+        .card-img:hover {
+            transform: translateY(-5px);
+        }
+
+        /* 3D Stacked Deck of Cards */
+        .deck-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .deck-stack {
+            position: relative;
+            width: 120px;
+            height: 174px;
+            cursor: pointer;
+        }
+        .deck-card {
+            position: absolute;
+            width: 120px;
+            height: 174px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+            background-size: cover;
+        }
+        .deck-card-1 {
+            top: 6px;
+            left: 6px;
+            z-index: 1;
+        }
+        .deck-card-2 {
+            top: 3px;
+            left: 3px;
+            z-index: 2;
+        }
+        .deck-card-3 {
+            top: 0;
+            left: 0;
+            z-index: 3;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        /* Glow animation for dealer prompt */
+        .deck-stack.glow .deck-card-3 {
+            box-shadow: 0 0 20px #ffdb3c, 0 0 40px #ffdb3c;
+            border: 2px solid #ffdb3c;
+            animation: pulse 1.2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .deck-label {
+            font-family: 'Outfit', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+        }
+
+        /* Right Side: Player List & Info */
+        .players-list-side {
+            width: 480px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .section-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+            color: rgba(255, 255, 255, 0.7);
+            letter-spacing: 1.5px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Player List Grid Table */
+        .players-grid-container {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-right: 5px;
+        }
+        .grid-header {
+            display: grid;
+            grid-template-columns: 2fr 1.5fr 1fr;
+            padding: 10px 15px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+        .player-row {
+            display: grid;
+            grid-template-columns: 2fr 1.5fr 1fr;
+            padding: 18px 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            align-items: center;
+            transition: all 0.2s;
+        }
+        .player-row.active {
+            background: rgba(0, 240, 255, 0.1);
+            border-color: #00f0ff;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+        }
+        .player-row.active .cell-name {
+            color: #00f0ff;
+            font-weight: 800;
+        }
+        .cell-name {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .cell-unit {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            display: block;
+            margin-top: 2px;
+        }
+        .cell-cards {
+            font-family: 'Outfit', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+        }
+        .cell-bet {
+            font-family: 'Outfit', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: #ffdb3c;
+        }
+        .status-playing { color: #00f0ff; animation: blink 1.5s infinite; }
+        .status-waiting { color: rgba(255, 255, 255, 0.4); }
+        .status-busted { color: #ff3b30; font-weight: 900; }
+        .status-blackjack { color: #34c759; font-weight: 900; }
+        .status-stood { color: #ffffff; }
+
+        @keyframes blink {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+
+        /* Bottom Control Buttons */
+        .dealer-controls {
+            display: flex;
+            gap: 15px;
+        }
+        .btn-dealer {
+            flex: 1;
+            padding: 15px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 18px;
+            font-weight: 800;
+            text-transform: uppercase;
+            border-radius: 12px;
+            cursor: pointer;
+            border: 2px solid #333333;
+            background: #000000;
+            color: white;
+            transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+        .btn-dealer:hover:not(:disabled) {
+            background: #222222;
+            transform: translateY(-2px);
+            border-color: #555555;
+        }
+        .btn-dealer:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        .btn-play {
+            background: #ffdb3c;
+            color: #000000;
+            border-color: #ffd214;
+        }
+        .btn-play:hover:not(:disabled) {
+            background: #ffe66d;
+            border-color: #ffdb3c;
+        }
+        .btn-reset {
+            background: #ff3b30;
+            color: white;
+            border-color: #e0241b;
+        }
+        .btn-reset:hover:not(:disabled) {
+            background: #ff453a;
+            border-color: #ff3b30;
+        }
+
+        /* Join Approval Modal Popup */
+        .approval-modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .approval-card {
+            background: #1e2837;
+            border: 2px solid #00f0ff;
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 440px;
+            box-shadow: 0 15px 40px rgba(0, 240, 255, 0.3);
+            text-align: center;
+            animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes slideIn {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .approval-card h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            color: #ffffff;
+        }
+        .approval-card p {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.5;
+            margin-bottom: 25px;
+        }
+        .approval-buttons {
+            display: flex;
+            gap: 15px;
+        }
+        .btn-approve {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        .btn-approve.accept {
+            background: #34c759;
+            color: white;
+        }
+        .btn-approve.accept:hover {
+            background: #30b651;
+            transform: translateY(-2px);
+        }
+        .btn-approve.reject {
+            background: #ff3b30;
+            color: white;
+        }
+        .btn-approve.reject:hover {
+            background: #e0241b;
+            transform: translateY(-2px);
+        }
+
+        /* Floating Notifications/Toasts */
+        .toast-container {
+            position: absolute;
+            top: 80px;
+            right: 30px;
+            z-index: 1000;
+            width: 320px;
+        }
+        .toast {
+            background: rgba(0, 0, 0, 0.9);
+            border-left: 5px solid #ffdb3c;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            margin-bottom: 10px;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .toast.error { border-color: #ff3b30; }
+        .toast.success { border-color: #34c759; }
+    </style>
+</head>
+<body>
+
+    <!-- Top Header -->
+    <header>
+        <div class="header-left">
+            <h1>BLACKJACK - DEALER SCREEN</h1>
+        </div>
+        <div class="header-right">
+            <a href="index.html" class="nav-home-btn">Main Menu</a>
+        </div>
+    </header>
+
+    <!-- Toast Notifications Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Join Request Modal Popup -->
+    <div class="approval-modal-backdrop" id="approval-modal" style="display: none;">
+        <div class="approval-card">
+            <h2>Player Join Request</h2>
+            <p id="approval-message">Player Paul (Unit 101) wants to join the game.</p>
+            <div class="approval-buttons">
+                <button class="btn-approve reject" onclick="respondToJoin(false)">Reject</button>
+                <button class="btn-approve accept" onclick="respondToJoin(true)">Accept</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Game Board -->
+    <main>
+        <!-- Left Side: Dealer cards and Deck stack -->
+        <div class="dealer-table-side">
+            <!-- Dealer cards display -->
+            <div class="dealer-cards-wrapper">
+                <div class="dealer-label" id="dealer-score-label">Dealer Score: 0</div>
+                <div class="dealer-cards-container" id="dealer-cards-container">
+                    <div style="color: rgba(255,255,255,0.15); font-size: 14px; font-weight: 600; text-transform: uppercase; border: 2px dashed rgba(255,255,255,0.05); padding: 40px; border-radius: 12px; text-align: center; width: 300px;">
+                        No Cards Dealt
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clickable Deck of cards -->
+            <div class="deck-wrapper">
+                <div class="deck-stack" id="deck-stack" onclick="onDeckClick()">
+                    <!-- Stack of cards for 3D appearance -->
+                    <div class="deck-card deck-card-1" style="background-image: url('/assets/cards/1B.svg')"></div>
+                    <div class="deck-card deck-card-2" style="background-image: url('/assets/cards/1B.svg')"></div>
+                    <div class="deck-card deck-card-3" style="background-image: url('/assets/cards/1B.svg')"></div>
+                </div>
+                <div class="deck-label" id="deck-count-label">DECK (52)</div>
+            </div>
+        </div>
+
+        <!-- Right Side: Player List Table -->
+        <div class="players-list-side">
+            <div class="section-title">
+                <span>PLAYERS</span>
+                <span id="player-count" style="font-size: 14px; color: rgba(255,255,255,0.4)">0 Joined</span>
+            </div>
+            
+            <div class="grid-header">
+                <span>Player</span>
+                <span>Cards / Score</span>
+                <span style="text-align: right;">Bet</span>
+            </div>
+
+            <!-- Joined players list -->
+            <div class="players-grid-container" id="players-list-container">
+                <div style="color: rgba(255,255,255,0.2); font-size: 14px; font-weight: 600; text-transform: uppercase; text-align: center; margin-top: 50px;">
+                    No players joined the game yet.
+                </div>
+            </div>
+
+            <!-- Bottom controls -->
+            <div class="dealer-controls">
+                <button class="btn-dealer" id="btn-dealer-bets" onclick="onBetsClick()">BETS</button>
+                <button class="btn-dealer btn-play" id="btn-dealer-play" onclick="onPlayClick()">PLAY</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let socket;
+        let activeRequests = [];
+        let currentRequest = null;
+        let gamePhase = 'LOBBY';
+
+        function initApp() {
+            initSocket();
+        }
+
+        function initSocket() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const testUser = urlParams.get('test_user');
+
+            socket = io({
+                query: testUser ? { test_user: testUser } : {}
+            });
+
+            // Join the socket room
+            socket.emit('join-game', 'blackjack_dealer');
+
+            socket.on('connect', () => {
+                console.log('Connected to socket server');
+            });
+
+            // Handle game state updates
+            socket.on('blackjack-state', (gameState) => {
+                handleStateUpdate(gameState);
+            });
+
+            socket.on('blackjack-notification', (data) => {
+                showToast(data.message, data.type || 'info');
+            });
+        }
+
+        function handleStateUpdate(state) {
+            gamePhase = state.phase;
+            
+            // Handle Join Requests queue
+            activeRequests = state.joinRequests;
+            checkJoinRequestsQueue();
+
+            // Render Dealer Cards
+            renderDealerCards(state.dealerCards);
+            
+            // Dealer Score Label
+            const scoreLabel = document.getElementById('dealer-score-label');
+            if (state.dealerReveal) {
+                scoreLabel.textContent = `Dealer Score: ${state.dealerScore}`;
+            } else if (state.dealerCards.length > 0) {
+                // Before flip, calculate and display the score of the visible card only
+                scoreLabel.textContent = `Dealer Score: ?`;
+            } else {
+                scoreLabel.textContent = `Dealer Score: 0`;
+            }
+
+            // Render Player List Grid
+            renderPlayerList(state.players, state.activePlayerIndex);
+
+            // Render deck count
+            document.getElementById('deck-count-label').textContent = `DECK (${state.deckCount})`;
+
+            // Prompt highlighting on deck stack
+            const deckStack = document.getElementById('deck-stack');
+            const isPlayerWaitingHit = state.phase === 'PLAYING' && state.activeAction === 'wants_hit';
+            const isDealerTurnAndNeedsHit = state.phase === 'DEALER_TURN' && (!state.dealerReveal || state.dealerScore < 17);
+
+            if (isPlayerWaitingHit || isDealerTurnAndNeedsHit) {
+                deckStack.classList.add('glow');
+            } else {
+                deckStack.classList.remove('glow');
+            }
+
+            // Configure Control buttons at the bottom
+            const betsBtn = document.getElementById('btn-dealer-bets');
+            const playBtn = document.getElementById('btn-dealer-play');
+
+            if (state.phase === 'LOBBY') {
+                betsBtn.textContent = 'BETS';
+                betsBtn.disabled = state.players.length === 0;
+                betsBtn.className = 'btn-dealer';
+                
+                playBtn.textContent = 'PLAY';
+                // Enabled only if there are players and all of them have bet > 0
+                const hasPlayers = state.players.length > 0;
+                const allPlacedBets = state.players.every(p => p.bet > 0);
+                playBtn.disabled = !hasPlayers || !allPlacedBets;
+                playBtn.className = 'btn-dealer btn-play';
+            } else if (state.phase === 'PLAYING') {
+                betsBtn.disabled = true;
+                playBtn.disabled = true;
+            } else if (state.phase === 'DEALER_TURN') {
+                betsBtn.disabled = true;
+                playBtn.disabled = true;
+            } else if (state.phase === 'RESOLVED') {
+                // Show CLEAR BOARD / NEW GAME button instead of PLAY
+                betsBtn.disabled = true;
+                playBtn.textContent = 'NEW GAME';
+                playBtn.disabled = false;
+                playBtn.className = 'btn-dealer btn-reset';
+            }
+        }
+
+        // Check and render join request popup modal
+        function checkJoinRequestsQueue() {
+            const modal = document.getElementById('approval-modal');
+            const msgEl = document.getElementById('approval-message');
+
+            if (activeRequests.length > 0 && gamePhase === 'LOBBY') {
+                currentRequest = activeRequests[0];
+                msgEl.textContent = `Player "${currentRequest.name}" (Unit ${currentRequest.unit}) wants to join the game.`;
+                modal.style.display = 'flex';
+            } else {
+                modal.style.display = 'none';
+                currentRequest = null;
+            }
+        }
+
+        function respondToJoin(accept) {
+            if (!currentRequest) return;
+            socket.emit('blackjack-dealer-response', {
+                userId: currentRequest.id,
+                accept: accept
+            });
+            document.getElementById('approval-modal').style.display = 'none';
+        }
+
+        // Render dealer cards
+        function renderDealerCards(cards) {
+            const container = document.getElementById('dealer-cards-container');
+            container.innerHTML = '';
+
+            if (!cards || cards.length === 0) {
+                container.innerHTML = `<div style="color: rgba(255,255,255,0.15); font-size: 14px; font-weight: 600; text-transform: uppercase; border: 2px dashed rgba(255,255,255,0.05); padding: 40px; border-radius: 12px; text-align: center; width: 300px;">No Cards Dealt</div>`;
+                return;
+            }
+
+            cards.forEach(cardCode => {
+                const img = document.createElement('img');
+                img.className = 'card-img';
+                // Show back of card if it's the 1B code
+                img.src = `/assets/cards/${cardCode}.svg`;
+                img.alt = cardCode;
+                container.appendChild(img);
+            });
+        }
+
+        // Render player list
+        function renderPlayerList(players, activeIndex) {
+            const container = document.getElementById('players-list-container');
+            document.getElementById('player-count').textContent = `${players.length} Joined`;
+
+            container.innerHTML = '';
+
+            if (players.length === 0) {
+                container.innerHTML = `<div style="color: rgba(255,255,255,0.2); font-size: 14px; font-weight: 600; text-transform: uppercase; text-align: center; margin-top: 50px;">No players joined the game yet.</div>`;
+                return;
+            }
+
+            players.forEach((player, index) => {
+                const isActive = index === activeIndex;
+                const row = document.createElement('div');
+                row.className = `player-row ${isActive ? 'active' : ''}`;
+
+                let statusClass = 'status-waiting';
+                let statusText = player.status;
+
+                // Format state messages matching mockup style
+                if (player.status === 'PLAYING') {
+                    statusClass = 'status-playing';
+                    statusText = 'PLAYING';
+                } else if (player.status === 'WAITING') {
+                    statusClass = 'status-waiting';
+                    statusText = 'WAITING';
+                } else if (player.status === 'BUSTED') {
+                    statusClass = 'status-busted';
+                    statusText = 'BUSTED';
+                } else if (player.status === 'BLACKJACK') {
+                    statusClass = 'status-blackjack';
+                    statusText = 'BLACKJACK';
+                } else if (player.status === 'STOOD') {
+                    statusClass = 'status-stood';
+                    statusText = `${player.score}`;
+                } else if (player.status === 'JOINED') {
+                    statusClass = 'status-waiting';
+                    statusText = player.bet > 0 ? 'READY' : 'BETTING';
+                }
+
+                // If hand contains cards, show total score or status
+                const scoreDisplay = player.cards.length > 0 ? statusText : statusText;
+
+                row.innerHTML = `
+                    <div>
+                        <span class="cell-name">${player.name}</span>
+                        <span class="cell-unit">Unit ${player.unit} ${player.socketId === null ? '(Offline)' : ''}</span>
+                    </div>
+                    <div class="cell-cards ${statusClass}">${scoreDisplay}</div>
+                    <div class="cell-bet" style="text-align: right;">$${player.bet}</div>
+                `;
+
+                container.appendChild(row);
+            });
+        }
+
+        // Deal card click
+        function onDeckClick() {
+            socket.emit('blackjack-deal-card');
+        }
+
+        // "BETS" button click
+        function onBetsClick() {
+            if (gamePhase !== 'LOBBY') return;
+            socket.emit('blackjack-dealer-bets');
+        }
+
+        // "PLAY" or "NEW GAME" click
+        function onPlayClick() {
+            if (gamePhase === 'LOBBY') {
+                socket.emit('blackjack-play');
+            } else if (gamePhase === 'RESOLVED') {
+                socket.emit('blackjack-reset');
+            }
+        }
+
+        // Toast Messages
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            toast.innerHTML = `
+                <span class="toast-content">${message}</span>
+                <span style="cursor:pointer; margin-left: 15px; font-weight: bold;" onclick="this.parentElement.remove()">×</span>
+            `;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 10);
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        initApp();
+    </script>
+</body>
+</html>

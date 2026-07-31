@@ -6,6 +6,7 @@ const db = require('./db');
 const kenoState = require('./keno-state');
 const bigWheel6State = require('./big_wheel_6-state');
 const chickenRaceState = require('./chicken_race-state');
+const blackjackState = require('./blackjack-state');
 
 // Check for --clear-db flag to reset the database on startup
 if (process.argv.includes('--clear-db')) {
@@ -15,12 +16,13 @@ if (process.argv.includes('--clear-db')) {
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
-const PORT = 3000;
+const PORT = process.env.PORT || 3001;
 
 // Initialize game states with socket.io
 kenoState.init(io);
 bigWheel6State.init(io);
 chickenRaceState.init(io);
+blackjackState.init(io);
 
 // Parse JSON request bodies
 app.use(express.json());
@@ -53,6 +55,9 @@ app.use('/api/big-wheel-6', bigWheelRoutes);
 
 const chickenRaceRoutes = require('./routes/chicken_race');
 app.use('/api/chicken-race', chickenRaceRoutes);
+
+const blackjackRoutes = require('./routes/blackjack');
+app.use('/api/blackjack', blackjackRoutes);
 
 // POST /api/keno/state-update - keno.py pushes game state here
 app.post('/api/keno/state-update', (req, res) => {
@@ -237,11 +242,84 @@ io.on('connection', (socket) => {
         betsLocked: cs.betsLocked,
         result: cs.result
       });
+    } else if (game === 'blackjack') {
+      socket.join('blackjack');
+      socket.emit('blackjack-state', blackjackState.getState());
+    } else if (game === 'blackjack_dealer') {
+      socket.join('blackjack_dealer');
+      socket.emit('blackjack-state', blackjackState.getState());
     }
     console.log(`Client ${socket.id} joined game: ${game}`);
   });
 
+  // Helper to get userId from socket connection context
+  function getUserIdFromSocket(s) {
+    const testUser = s.handshake.query.test_user;
+    const identifier = testUser || s.handshake.address || 'unknown';
+    const user = db.getOrCreateUser(identifier);
+    return user.id;
+  }
+
+  // Blackjack gameplay actions
+  socket.on('blackjack-join-request', () => {
+    const userId = getUserIdFromSocket(socket);
+    const d = db.getData();
+    const user = d.users.find(u => u.id === userId);
+    blackjackState.addJoinRequest(
+      userId, 
+      socket.id, 
+      user ? user.username : 'Unknown', 
+      user ? user.unit_number : 'Unknown'
+    );
+  });
+
+  socket.on('blackjack-dealer-response', ({ userId, accept }) => {
+    blackjackState.handleDealerResponse(userId, accept);
+  });
+
+  socket.on('blackjack-leave', () => {
+    const userId = getUserIdFromSocket(socket);
+    blackjackState.removePlayer(userId, socket.id);
+  });
+
+  socket.on('blackjack-bet-update', ({ bet }) => {
+    const userId = getUserIdFromSocket(socket);
+    blackjackState.updateBet(userId, bet);
+  });
+
+  socket.on('blackjack-clear-bet', () => {
+    const userId = getUserIdFromSocket(socket);
+    blackjackState.clearBet(userId);
+  });
+
+  socket.on('blackjack-play', () => {
+    blackjackState.startGame();
+  });
+
+  socket.on('blackjack-hit', () => {
+    const userId = getUserIdFromSocket(socket);
+    blackjackState.handlePlayerHit(userId);
+  });
+
+  socket.on('blackjack-stand', () => {
+    const userId = getUserIdFromSocket(socket);
+    blackjackState.handlePlayerStand(userId);
+  });
+
+  socket.on('blackjack-deal-card', () => {
+    blackjackState.handleDealerDealCard();
+  });
+
+  socket.on('blackjack-dealer-bets', () => {
+    blackjackState.sendDealerNotification('Please place your bets!', 'warning');
+  });
+
+  socket.on('blackjack-reset', () => {
+    blackjackState.resetState();
+  });
+
   socket.on('disconnect', () => {
+    blackjackState.handleDisconnect(socket.id);
     console.log(`Client disconnected: ${socket.id}`);
   });
 });

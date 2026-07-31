@@ -93,6 +93,7 @@ header h1 {
 .keno-theme:hover { border-color: #3b82f6; box-shadow: 0 15px 40px rgba(59, 130, 246, 0.3); }
 .big-wheel-theme:hover { border-color: #00E5FF; box-shadow: 0 15px 40px rgba(0, 229, 255, 0.3); }
 .chicken-race-theme:hover { border-color: #f97316; box-shadow: 0 15px 40px rgba(249, 115, 22, 0.3); }
+.blackjack-theme:hover { border-color: #10b981; box-shadow: 0 15px 40px rgba(16, 185, 129, 0.3); }
 
 .card-content h2 {
     font-size: 28px;
@@ -104,6 +105,7 @@ header h1 {
 .keno-theme h2 { color: #3b82f6; }
 .big-wheel-theme h2 { color: #00E5FF; }
 .chicken-race-theme h2 { color: #f97316; }
+.blackjack-theme h2 { color: #10b981; }
 
 .card-content p {
     color: var(--text-muted);
@@ -127,6 +129,7 @@ header h1 {
 .keno-theme .card-action { color: #3b82f6; }
 .big-wheel-theme .card-action { color: #00E5FF; }
 .chicken-race-theme .card-action { color: #f97316; }
+.blackjack-theme .card-action { color: #10b981; }
 
 .game-card:hover .card-action {
     background: rgba(255,255,255,0.1);
