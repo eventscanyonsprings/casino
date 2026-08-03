@@ -126,11 +126,28 @@ function isNaturalBlackjack(cards) {
 }
 
 /**
- * Broadcast current state to both players and dealers
+ * Get state formatted for the dealer screen (full information including socketIds)
+ * @returns {Object} State object with deckCount instead of raw deck array
  */
-function broadcastState() {
-  if (!io) return;
+function getDealerState() {
+  return {
+    phase: state.phase,
+    players: state.players,
+    joinRequests: state.joinRequests,
+    deckCount: state.deck.length,
+    dealerCards: state.dealerCards,
+    dealerScore: state.dealerScore,
+    dealerReveal: state.dealerReveal,
+    activePlayerIndex: state.activePlayerIndex,
+    activeAction: state.activeAction
+  };
+}
 
+/**
+ * Get state formatted for player screens (sanitized - no socketIds, hidden dealer card)
+ * @returns {Object} State object with deckCount, sanitized players, and hidden dealer card
+ */
+function getPlayerState() {
   // For players, we filter the dealer's second card if not revealed
   const getDealerCardsForPlayers = () => {
     if (state.dealerReveal || state.dealerCards.length < 2) {
@@ -148,21 +165,7 @@ function broadcastState() {
     return calculateScore([state.dealerCards[0]]);
   };
 
-  // Broadcast full state to dealer
-  io.to('blackjack_dealer').emit('blackjack-state', {
-    phase: state.phase,
-    players: state.players,
-    joinRequests: state.joinRequests,
-    deckCount: state.deck.length,
-    dealerCards: state.dealerCards,
-    dealerScore: state.dealerScore,
-    dealerReveal: state.dealerReveal,
-    activePlayerIndex: state.activePlayerIndex,
-    activeAction: state.activeAction
-  });
-
-  // Broadcast safe state to players
-  io.to('blackjack').emit('blackjack-state', {
+  return {
     phase: state.phase,
     players: state.players.map(p => ({
       id: p.id,
@@ -179,7 +182,20 @@ function broadcastState() {
     dealerReveal: state.dealerReveal,
     activePlayerIndex: state.activePlayerIndex,
     activeAction: state.activeAction
-  });
+  };
+}
+
+/**
+ * Broadcast current state to both players and dealers
+ */
+function broadcastState() {
+  if (!io) return;
+
+  // Broadcast full state to dealer
+  io.to('blackjack_dealer').emit('blackjack-state', getDealerState());
+
+  // Broadcast safe state to players
+  io.to('blackjack').emit('blackjack-state', getPlayerState());
 }
 
 /**
@@ -702,6 +718,8 @@ module.exports = {
   handleDealerDealCard,
   sendDealerNotification,
   getState,
+  getDealerState,
+  getPlayerState,
   PHASES,
   STATUSES
 };

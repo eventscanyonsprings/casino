@@ -244,10 +244,10 @@ io.on('connection', (socket) => {
       });
     } else if (game === 'blackjack') {
       socket.join('blackjack');
-      socket.emit('blackjack-state', blackjackState.getState());
+      socket.emit('blackjack-state', blackjackState.getPlayerState());
     } else if (game === 'blackjack_dealer') {
       socket.join('blackjack_dealer');
-      socket.emit('blackjack-state', blackjackState.getState());
+      socket.emit('blackjack-state', blackjackState.getDealerState());
     }
     console.log(`Client ${socket.id} joined game: ${game}`);
   });
